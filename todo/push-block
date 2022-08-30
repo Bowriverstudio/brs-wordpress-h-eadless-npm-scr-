@@ -1,0 +1,80 @@
+#!/usr/bin/env node
+
+require('dotenv-flow').config();
+
+const fs = require('fs');
+
+const dotenv = require('dotenv');
+const FormData = require('form-data');
+const fetch = require('node-fetch');
+const zip = require('zip-a-folder');
+
+const envConfig = dotenv.parse(fs.readFileSync('.env.local'));
+for (const k in envConfig) {
+  process.env[k] = envConfig[k];
+}
+
+const help = () => {
+  console.log(
+    'Usage:  npm run push-block --block=Footer --force_upload=1      '
+  );
+};
+const main = async ({ block, force_upload }) => {
+  const src_directory = './src/components/' + block;
+  if (!envConfig.BRS_SECRET_KEY) {
+    console.log('BRS_SECRET_KEY must be defined in env.local');
+    return;
+  }
+
+  if (!block) {
+    console.log('Block required');
+    help();
+    return;
+  }
+
+  if (!fs.existsSync(src_directory)) {
+    console.log("Block doesn't exist at ", src_directory);
+    help();
+    return;
+  }
+
+  const brs_file = src_directory + '/brs.json';
+
+  if (!fs.existsSync(brs_file)) {
+    console.log("Block brs.json file doesn't exist at ", src_directory);
+    help();
+    return;
+  }
+
+  // // Zip The Folder
+  const zip_file = '/tmp/brs.zip';
+  zip.zip(src_directory, zip_file);
+
+  // Upload the File.
+  const endpoint = `${envConfig.BRS_WORDPRESS_COMPONENT_URL}/wp-json/brs/v1/brsUploadBlock`;
+  console.log('endpoint', endpoint);
+  const formData = new FormData();
+  formData.append('key', envConfig.BRS_SECRET_KEY);
+  formData.append('block', block);
+  formData.append('force_upload', force_upload);
+
+  const buffer = fs.readFileSync(zip_file);
+  const fileName = 'brs.zip';
+
+  formData.append('block-file', buffer, {
+    contentType: 'application/zip',
+    name: 'block-file',
+    filename: fileName,
+  });
+
+  const response = await fetch(endpoint, { method: 'POST', body: formData });
+  const responseData = await response.json();
+  console.log(responseData);
+
+  // console.log('In Main: block, force_upload', block, force_upload);
+};
+
+main({
+  block: process.env.npm_config_block,
+  force_upload: process.env?.npm_config_force_upload ?? 'false',
+});

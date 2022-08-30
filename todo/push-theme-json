@@ -1,0 +1,37 @@
+#!/usr/bin/env node
+require('dotenv-flow').config();
+
+const fs = require('fs');
+const path = require('path');
+
+const FormData = require('form-data');
+const fetch = require('node-fetch');
+
+/**
+ * Loops through all the components and searches `registerBlockStyles.js` file.
+*
+* If exists post to the Rest API
+*/
+const pushThemeJson = async () => {
+console.log('PUSH');
+const endpoint = `/wp-json/brs/v1/brsUploadThemeJson`;
+const formData = new FormData();
+formData.append('key', process.env.FAUSTWP_SECRET_KEY);
+
+const buffer = fs.readFileSync('./src/styles/theme.json');
+const fileName = 'theme.json';
+
+formData.append('theme', buffer, {
+	contentType: 'application/json',
+	name: 'theme',
+	filename: fileName,
+});
+
+const response = await fetch(endpoint, { method: 'POST', body: formData });
+const responseData = await response.json();
+console.log(responseData);
+};
+
+pushThemeJson();
+			   
+				  

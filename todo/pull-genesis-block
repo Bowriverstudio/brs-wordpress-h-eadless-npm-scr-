@@ -1,0 +1,101 @@
+#!/usr/bin/env node
+console.log(
+'Usage:  npm run pull-genesis-block --block=OurTeam --force_overwrite=1      '
+);
+require('dotenv-flow').config();
+
+const fs = require('fs');
+
+const dotenv = require('dotenv');
+const FormData = require('form-data');
+const fetch = require('node-fetch');
+const StreamZip = require('node-stream-zip');
+
+const config = require('../genesis.config');
+const envConfig = dotenv.parse(fs.readFileSync('.env.local'));
+for (const k in envConfig) {
+	process.env[k] = envConfig[k];
+}
+
+
+async function download_file( url, name ) {
+	const res = await fetch(url);
+	await new Promise((resolve, reject) => {
+	const fileStream = fs.createWriteStream(name);
+	res.body.pipe(fileStream);
+	res.body.on("error", (err) => {
+		reject(err);
+	});
+	fileStream.on("finish", function() {
+		resolve();
+	});
+	});
+}
+
+const main = async ({ block, force_overwrite }) => {
+
+	const block_directory = config.scaffold.destination + block;
+	const zipFileLocation = `${block_directory}.zip`
+
+	if (!envConfig.BRS_SECRET_KEY) {
+		console.log('BRS_SECRET_KEY must be defined in env.local');
+		return;
+	}
+
+	if (fs.existsSync(block_directory)) {
+
+		if( force_overwrite ){
+			// Delete Existing Folder and overwrite
+			fs.rmSync(block_directory, { recursive: true, force: true });
+		} else {
+			console.log("Block already exist at ", block_directory);
+			console.log("Use force_overwrite if you want to overwrite");
+			const command = `npm run pull-genesis-block --block=${block} --force_overwrite=1      `
+			console.log(command);
+			console.log(force_overwrite);
+			return;
+		}	
+	}
+
+
+	// Download the File.
+	const endpoint = `${envConfig.BRS_WORDPRESS_COMPONENT_URL}/wp-json/brs/v1/brsDownloadGenesisBlock`;
+	console.log('endpoint', endpoint);
+	const formData = new FormData();
+	formData.append('key', envConfig.BRS_SECRET_KEY);
+	formData.append('block', block );
+
+	const response = await fetch(endpoint, { method: 'POST', body: formData });
+	const isJson = response.headers.get('content-type')?.includes('application/json');
+
+
+
+
+	if( isJson ){
+		const responseData = await response.json();
+		console.log(responseData);
+
+		if( responseData.zip_url){
+			await download_file(responseData.zip_url, zipFileLocation)
+
+			const zip = new StreamZip.async({ file: zipFileLocation });
+			fs.mkdirSync(block_directory);
+			const count = await zip.extract(null, block_directory);
+			console.log(`Extracted ${count} entries`);
+			await zip.close();
+
+			fs.unlink(zipFileLocation, (err) => {
+				if (err) console.log("err", err)
+			});
+
+		}
+	}
+};
+
+main({
+	block: process.env.npm_config_block,
+	force_overwrite: process.env.npm_config_force_overwrite,
+});
+	
+		 
+			  
