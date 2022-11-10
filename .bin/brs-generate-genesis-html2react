@@ -1,0 +1,48 @@
+#!/usr/bin/env node
+
+const fs = require("fs");
+const path = require("path");
+
+const fetch = require("node-fetch");
+
+const config = require("../../../genesis.config");
+
+
+const generateParseGenesisCustomBlocks = () => {
+  const body = JSON.stringify({
+    query: `
+	query { genesisGenerateParseGenesisCustomBlocks
+	}`,
+  });
+
+  fetch(config.endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: body,
+  })
+    .then((res) => res.json())
+    .then((result) => {
+      try {
+        // write the file to src/styles/tw.generate.js after
+        // having prettier format the string for us
+        fs.writeFileSync(
+          path.resolve(
+            process.cwd(),
+            config.parseGenesisCustomBlocks.destination
+          ),
+          result.data.genesisGenerateParseGenesisCustomBlocks,
+          "utf-8"
+        );
+      } catch (err) {
+        // uh-oh, something happened here!
+        console.log("ERROR", err.message);
+      }
+    });
+};
+
+if (config?.parseGenesisCustomBlocks?.generate) {
+  generateParseGenesisCustomBlocks();
+  console.log("Finished Html2React");
+}

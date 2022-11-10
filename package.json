@@ -16,7 +16,9 @@
   },
   "homepage": "https://github.com/Bowriverstudio/brs-wordpress-h-eadless-npm-scr-#readme",
   "devDependencies": {
-    "node-fetch": "^3.2.10",
     "rimraf": "^3.0.2"
+  },
+  "dependencies": {
+    "cross-fetch": "^3.1.5"
   }
 }

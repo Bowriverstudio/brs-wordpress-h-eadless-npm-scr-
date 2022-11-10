@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+
+const fs = require("fs");
+const path = require("path");
+
+const fetch = require("node-fetch");
+
+const config = require("../../../genesis.config");
+
+// genesisCustomBlockTypescript - generates the file
+const generateTypescript = () => {
+  const body = JSON.stringify({
+    query: `
+	query { genesisCustomBlockTypescript
+	}`,
+  });
+
+  fetch(config.endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: body,
+  })
+    .then((res) => res.json())
+    .then((result) => {
+      try {
+        // write the file to src/styles/tw.generate.js after
+        // having prettier format the string for us
+        fs.writeFileSync(
+          path.resolve(process.cwd(), `${config.typescript.destination}`),
+          result.data.genesisCustomBlockTypescript,
+          "utf-8"
+        );
+      } catch (err) {
+        // uh-oh, something happened here!
+        console.log("ERROR", err.message);
+      }
+    });
+};
+
+if (config?.typescript?.generate) {
+  generateTypescript();
+  console.log("Done TypeScript");
+}
