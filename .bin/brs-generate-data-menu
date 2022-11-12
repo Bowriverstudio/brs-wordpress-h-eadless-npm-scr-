@@ -1,0 +1,89 @@
+#!/usr/bin/env node
+
+const fs = require("fs");
+const path = require("path");
+
+const fetch = require("node-fetch");
+
+const config = require("../../../brs.config");
+
+const generateMenuData = ({ slug }) => {
+  console.log({ slug });
+
+  const body = JSON.stringify({
+    query: `
+	query { menu(id: "${slug}" idType: SLUG) {
+	    id 
+        menuItems {
+                nodes { id, path, label, parentId }
+            }
+        }
+	}`,
+  });
+
+  fetch(config.endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: body,
+  })
+    .then((res) => res.json())
+    .then((result) => {
+      console.log(result);
+      console.log(result.data.menu.menuItems);
+
+      const content =
+        `import{MenuItem} from "client" \n export const ${slug}:MenuItem[] = ` +
+        JSON.stringify(result.data.menu.menuItems.nodes);
+
+      const fileName = `${config.data.menu.destination}${slug}.ts`;
+
+      if (!fs.existsSync(`${config.data.menu.destination}`)) {
+        fs.mkdirSync(`${config.data.destination}`);
+        fs.mkdirSync(`${config.data.menu.destination}`);
+      }
+      try {
+        fs.writeFileSync(
+          path.resolve(process.cwd(), fileName),
+          content,
+          "utf-8"
+        );
+      } catch (err) {
+        // uh-oh, something happened here!
+        console.log("ERROR", err.message);
+      }
+    });
+};
+
+const generateMenusData = () => {
+  const body = JSON.stringify({
+    query: `
+      query { menus { nodes { slug } }
+      }`,
+  });
+
+  fetch(config.endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: body,
+  })
+    .then((res) => res.json())
+    .then((result) => {
+      if (result?.data?.menus?.nodes) {
+        result?.data?.menus?.nodes.map((slug) => {
+          generateMenuData(slug);
+        });
+      } else {
+        console.warn("Not Valid", result);
+      }
+    });
+};
+
+if (config?.data?.menu?.generate) {
+  generateMenusData();
+  //   generateMenuData({ slug: "primary" });
+  console.log("Done Menu");
+}

@@ -5,10 +5,7 @@ const path = require("path");
 
 const fetch = require("node-fetch");
 
-const config = require("../../../genesis.config");
-const { stringify } = require("querystring");
-
-
+const config = require("../../../brs.config");
 
 const generateScaffoldComponent = ({ componentName, slug }) => {
   console.log("Generating - " + componentName + " " + slug);
@@ -20,7 +17,6 @@ const generateScaffoldComponent = ({ componentName, slug }) => {
 	name }
 	}`,
   });
-
 
   fetch(config.endpoint, {
     method: "POST",

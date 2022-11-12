@@ -5,10 +5,9 @@ const path = require("path");
 
 const fetch = require("node-fetch");
 
-const config = require("../../../genesis.config");
+const config = require("../../../brs.config");
 
-require('./brs-generate-genesis-components')
-require('./brs-generate-genesis-html2react')
-require('./brs-generate-genesis-tests')
-require('./brs-generate-genesis-ts')
- 
+require("./brs-generate-genesis-components");
+require("./brs-generate-genesis-html2react");
+require("./brs-generate-genesis-tests");
+require("./brs-generate-genesis-ts");

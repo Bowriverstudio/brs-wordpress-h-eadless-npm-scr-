@@ -5,8 +5,7 @@ const path = require("path");
 
 const fetch = require("node-fetch");
 
-const config = require("../../../genesis.config");
-
+const config = require("../../../brs.config");
 
 const generateParseGenesisCustomBlocks = () => {
   const body = JSON.stringify({
