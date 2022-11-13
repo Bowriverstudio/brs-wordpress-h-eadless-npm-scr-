@@ -14,7 +14,7 @@ const generateMenuData = ({ slug }) => {
     query: `
 	query { menu(id: "${slug}" idType: SLUG) {
 	    id 
-        menuItems {
+        menuItems( first:100 ) {
                 nodes { id, path, label, parentId }
             }
         }
