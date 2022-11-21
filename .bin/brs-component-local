@@ -1,0 +1,84 @@
+#!/usr/bin/env node
+const config = require("../../../brs.config");
+
+const yargs = require("yargs");
+
+const fs = require("fs");
+const path = require("path");
+
+const poc_component_path = config.poc_path + "/src/components";
+const faust_component_path = config.faust_path + "/src/components";
+
+function getDirectories(srcpath) {
+  const paths = fs
+    .readdirSync(srcpath)
+    .map((file) => path.join(srcpath, file))
+    .filter((path) => fs.statSync(path).isDirectory());
+
+  return paths.map((path) => path.split("/").pop());
+}
+
+function listCommands() {
+  console.log("Possible Commands");
+
+  const components = getDirectories(poc_component_path);
+  components.map((component) => {
+    console.log(`npm run push-component-local push ${component}`);
+  });
+}
+
+yargs.command({
+  command: "push",
+  describe: "Push a New",
+  handler: function () {
+    const components = getDirectories(poc_component_path);
+    const component = yargs.argv._[1];
+
+    if (components.includes(component)) {
+      const destination_dir = faust_component_path + "/" + component;
+      fs.rmSync(destination_dir, { recursive: true, force: true });
+
+      console.log("Exists");
+    } else {
+      console.log("DOESN");
+    }
+
+    console.log(yargs.argv._[1]);
+
+    console.log("add a new note");
+  },
+});
+
+//Create remove command
+yargs.command({
+  command: "remove",
+  describe: "Remove the note",
+  handler: function () {
+    console.log("Removing a note");
+  },
+});
+
+//Create list command
+yargs.command({
+  command: "list",
+  describe: "List all the notes",
+  handler: function () {
+    listCommands();
+  },
+});
+
+//Create read command
+yargs.command({
+  command: "read",
+  describe: "read note",
+  handler: function () {
+    console.log("read a note");
+  },
+});
+
+yargs.argv;
+const command = yargs.argv._[0];
+
+if (command === undefined) {
+  listCommands();
+}
