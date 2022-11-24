@@ -1,0 +1,160 @@
+#!/usr/bin/env node
+
+// Delete files data.generated.ts and pages.generated.stories.tsx
+// Query all Pages
+// Loop through pages - append to data.generated.ts
+// Create a sample pages.generated.stories.tsx
+// Create a template for pages.generated.stories.tsx
+// Within page loop calculate for said loop
+// Write pages.generated.stories.tsx
+
+const fs = require("fs-extra");
+const path = require("path");
+
+const fetch = require("node-fetch");
+
+const config = require("../../../brs.config");
+const generated_data_path =
+  config.data.pages.destination + "/data.generated.ts";
+
+const setupGeneratedFiles = async () => {
+  // Delete Existing Folder
+  await fs.rmSync(config.data.pages.destination, {
+    recursive: true,
+    force: true,
+  });
+
+  await fs.ensureFile(generated_data_path);
+
+  const ts =
+    `export type GeneratedPageData = {id:string, slug:string, content:string|null}` +
+    "\n";
+  fs.appendFile(generated_data_path, ts);
+
+  const ts2 =
+    `interface GeneratedPageDataList { [key: string]: GeneratedPageData; }` +
+    "\n";
+  fs.appendFile(generated_data_path, ts2);
+};
+
+const getPages = async () => {
+  const body = JSON.stringify({
+    query: `
+        query { pages(first: 100) {
+            nodes {
+              id
+              slug
+              content(format: RENDERED)
+            }
+          }
+        }`,
+  });
+
+  const result = fetch(config.endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: body,
+  })
+    .then((res) => res.json())
+    .then((result) => {
+      return result.data.pages.nodes;
+    });
+
+  return result;
+};
+
+const writeData = async (pages) => {
+  const slugs = [];
+  const data = {};
+
+  pages.map((page) => {
+    slugs.push(page.slug);
+    data[page.slug] = { ...page };
+  });
+
+  // Write Locations
+  const slugsTxt =
+    `export const slugs: string[] = ` + JSON.stringify(slugs) + "\n";
+  fs.appendFile(generated_data_path, slugsTxt);
+
+  const dataTxt =
+    `export const pages: GeneratedPageDataList = ` +
+    JSON.stringify(data) +
+    "\n";
+  fs.appendFile(generated_data_path, dataTxt);
+};
+
+const writeStorybookData = async (pages) => {
+  const slugs = [];
+  const data = {};
+
+  pages.map((page) => {
+    slugs.push(page.slug);
+    data[page.slug] = { ...page };
+  });
+
+  // Storybook File
+  const generated_storybook_path =
+    config.data.pages.destination + "/pages.generated.stories.tsx";
+  await fs.ensureFile(generated_storybook_path);
+
+  const headerTxt = `
+    // GENERATED - and v 0.2.2 - this will change
+    import { Meta } from '@storybook/react';
+
+import { getMenuData } from 'tests/data/menu';
+import { flatListToHierarchical } from 'utilities';
+
+import { Main, Footer } from 'components';
+import HeaderSkeleton from 'components/Header/HeaderSkeleton';
+
+import { pages } from './data.generated';
+const headerMenu = flatListToHierarchical(getMenuData({}), '');
+
+const storyBookTitle = {} as Meta;
+
+const Template = (args: any) => {
+  return (
+    <>
+      <body className="relative">
+        <HeaderSkeleton hierarchicalMenu={headerMenu} theme={args.theme} />
+        <Main html={args.html} />
+        <Footer />
+      </body>
+    </>
+  );
+};
+    `;
+  fs.appendFile(generated_storybook_path, headerTxt);
+
+  slugs.map((slug) => {
+    const formatted_slug = slug.replaceAll("-", "_");
+    const txt = `export const ${formatted_slug} = Template.bind({});
+            ${formatted_slug}.args = {
+                html: pages['${slug}'].content,
+                theme: 'PRIMARY',
+            };
+        `;
+    fs.appendFile(generated_storybook_path, txt);
+  });
+
+  const footerTxt = `
+
+export default storyBookTitle;`;
+  fs.appendFile(generated_storybook_path, footerTxt);
+};
+
+if (config?.data?.pages?.generate) {
+  async function asyncCall() {
+    console.log("calling");
+    await setupGeneratedFiles();
+    const pages = await getPages();
+    await writeData(pages);
+    await writeStorybookData(pages);
+    // expected output: "resolved"
+  }
+
+  asyncCall();
+}

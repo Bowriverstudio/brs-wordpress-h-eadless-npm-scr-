@@ -1,89 +1,141 @@
 #!/usr/bin/env node
 
-const fs = require("fs");
+const fs = require("fs-extra");
 const path = require("path");
 
 const fetch = require("node-fetch");
 
 const config = require("../../../brs.config");
 
-const generateMenuData = ({ slug }) => {
-  console.log({ slug });
 
-  const body = JSON.stringify({
-    query: `
-	query { menu(id: "${slug}" idType: SLUG) {
-	    id 
-        menuItems( first:100 ) {
-                nodes { id, path, label, parentId }
+const getMenus = async () => {
+    const body = JSON.stringify({
+        query: `
+          query { menus { nodes { locations } }
+          }`,
+      });
+    
+    const result = await fetch( config.endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: body,
+      })
+    .then((res) => res.json())
+    .then((result) => {
+        return result?.data?.menus?.nodes
+    });
+    
+
+    const theData =  await Promise.all(result.map( async data => {
+        
+
+        return await  Promise.all(data.locations.map(async location => {
+            const items = await getMenuItems({location})
+            return await { location, items  }
+        }))
+
+
+    })); 
+
+    // console.log(JSON.stringify(theData))
+
+    return theData
+
+}
+
+const getMenuItems = async ({ location }) => {
+
+    const body = JSON.stringify({
+        query: `
+        query { 
+            menuItems(where: {location: ${location}}, first: 100) {
+                nodes {
+                    id
+                    path
+                    label
+                    parentId
+                    cssClasses
+                    menu {
+                        node {
+                            name
+                        }
+                    }
+                }
             }
-        }
-	}`,
-  });
+        }`,
+      });
 
-  fetch(config.endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: body,
-  })
-    .then((res) => res.json())
-    .then((result) => {
-      console.log(result);
-      console.log(result.data.menu.menuItems);
+      const  result = await fetch(config.endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: body,
+      })
+        .then((res) => res.json())
+        .then((result) => {
+          return result
+        })
+        return  result
+ }
 
-      const content =
-        `import{MenuItem} from "client" \n export const ${slug}:MenuItem[] = ` +
-        JSON.stringify(result.data.menu.menuItems.nodes);
+ const writeData =  async (menusList) => {
 
-      const fileName = `${config.data.menu.destination}${slug}.ts`;
+    const menu_path = config.data.menu.destination + "data.generated.ts"
+   
+    await fs.ensureFile(menu_path)
+    await fs.unlink(menu_path)
+    await fs.ensureFile(menu_path)
 
-      if (!fs.existsSync(`${config.data.menu.destination}`)) {
-        fs.mkdirSync(`${config.data.destination}`);
-        fs.mkdirSync(`${config.data.menu.destination}`);
-      }
-      try {
-        fs.writeFileSync(
-          path.resolve(process.cwd(), fileName),
-          content,
-          "utf-8"
-        );
-      } catch (err) {
-        // uh-oh, something happened here!
-        console.log("ERROR", err.message);
-      }
-    });
-};
+    const locations = []
+    const data = {}
 
-const generateMenusData = () => {
-  const body = JSON.stringify({
-    query: `
-      query { menus { nodes { slug } }
-      }`,
-  });
+    //[
+    //  [ { location: 'FOOTER', items: [Object] } ],
+    //  [  { location: 'PRIMARY', items: [Object] } ]
+    // ]
 
-  fetch(config.endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: body,
-  })
-    .then((res) => res.json())
-    .then((result) => {
-      if (result?.data?.menus?.nodes) {
-        result?.data?.menus?.nodes.map((slug) => {
-          generateMenuData(slug);
-        });
-      } else {
-        console.warn("Not Valid", result);
-      }
-    });
-};
+    menusList.map(menus => {
+
+        menus.map(menu => {
+            console.log(menu)
+            locations.push( menu.location )
+            data[menu.location] = menu.items.data.menuItems.nodes
+        })
+
+        // const const_name = page.slug.replaceAll('-', '_')
+        // const txt = `export const ${const_name} :GeneratedPageData = ` + JSON.stringify(page) + "\n"
+        // fs.appendFile(generated_data_path, txt)
+    })
+
+    // Write Imports
+    const txt1 = `import { NavigationMenuItemFragmentFragment } from "client" ` + "\n"
+    fs.appendFile(menu_path, txt1)
+
+    const txt2 = `interface GeneratedMenuData  {[key: string]: NavigationMenuItemFragmentFragment[]; }  ` + "\n"
+    fs.appendFile(menu_path, txt2)
+
+    // Write Locations
+    const txt3 = `export const locations: string[] = ` + JSON.stringify(locations) + "\n"
+    fs.appendFile(menu_path, txt3)
+
+    // Write Data
+    const txt4 = `export const menus: GeneratedMenuData = `+ JSON.stringify(data) + "\n"
+    fs.appendFile(menu_path, txt4)
+    console.log(data)
+
+  }
+
 
 if (config?.data?.menu?.generate) {
-  generateMenusData();
-  //   generateMenuData({ slug: "primary" });
-  console.log("Done Menu");
+
+    async function asyncCall() {
+        const menus = await getMenus();
+        await writeData(menus)
+      }
+      
+      asyncCall();
+
 }

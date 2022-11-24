@@ -21,9 +21,13 @@ const config = {
   data: {
     menu: {
       generate: true,
-      destination: "./tests/data/menu/",
+      destination: "./src/tests/data/menu/",
     },
-    destination: "./tests/data/",
+    pages: {
+      generate: true,
+      destination: "./src/tests/data/pages/",
+    },
+    destination: "./src/tests/data/",
   },
 };
 

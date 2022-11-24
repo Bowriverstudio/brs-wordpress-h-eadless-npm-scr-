@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 
-const fs = require("fs");
-const path = require("path");
-
-const fetch = require("node-fetch");
-
+const fs = require("fs-extra");
 const config = require("../../../brs.config");
+if (!fs.existsSync(config.scaffold.destination) ) {
+    fs.mkdirSync(config.scaffold.destination);}
 
 require("./brs-generate-genesis-components");
 require("./brs-generate-genesis-html2react");

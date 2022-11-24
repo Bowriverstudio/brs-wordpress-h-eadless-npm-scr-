@@ -3,8 +3,9 @@ const config = require("../../../brs.config");
 
 const yargs = require("yargs");
 
-const fs = require("fs");
+const fs = require("fs-extra");
 const path = require("path");
+
 
 const poc_component_path = config.poc_path + "/src/components";
 const faust_component_path = config.faust_path + "/src/components";
@@ -23,9 +24,24 @@ function listCommands() {
 
   const components = getDirectories(poc_component_path);
   components.map((component) => {
-    console.log(`npm run push-component-local push ${component}`);
+    console.log(`npm run component-local push ${component}`);
   });
 }
+
+
+function moveComponentToFaust(src_dir, dest_dir){
+
+    // Delete Existing dest_dir Directory
+    fs.rmSync(dest_dir, { recursive: true, force: true });
+
+    // Copy From scr to dest
+    fs.copySync(src_dir, dest_dir, { overwrite: true });
+
+    // Remove Test Directory at dest
+    const test_dir = dest_dir + "/tests";
+    fs.rmSync(test_dir, { recursive: true, force: true });
+}
+
 
 yargs.command({
   command: "push",
@@ -34,29 +50,47 @@ yargs.command({
     const components = getDirectories(poc_component_path);
     const component = yargs.argv._[1];
 
-    if (components.includes(component)) {
-      const destination_dir = faust_component_path + "/" + component;
-      fs.rmSync(destination_dir, { recursive: true, force: true });
+    if( component.startsWith('GenesisCustomBlocks') ){
 
-      console.log("Exists");
+        const genesisCustomBlocksDir = poc_component_path + "/" + component;
+
+        const genesisCustomBlocks = getDirectories(genesisCustomBlocksDir)
+
+        console.log(genesisCustomBlocks)
+        // TODO - Make it possible to move only one block at a time.
+        genesisCustomBlocks.map(genesisCustomBlock => {
+            const src_dir = poc_component_path + "/" + component + "/" + genesisCustomBlock;
+            const destination_dir = faust_component_path + "/" + component + "/" + genesisCustomBlock;
+            moveComponentToFaust(src_dir, destination_dir)
+            console.log(`Copied ${genesisCustomBlock} over`);
+        })
+
+        // Need to move over the client genesis.generated.ts
+        const src = config.poc_path + "/src/client/genesis.generated.ts";
+        const dest = config.faust_path + "/src/client/genesis.generated.ts";
+        fs.copySync(src, dest, { overwrite: true });
+
+    } else if (components.includes(component)) {
+      const src_dir = poc_component_path + "/" + component;
+      const destination_dir = faust_component_path + "/" + component;
+      moveComponentToFaust(src_dir, destination_dir)
+      console.log(`Copied ${component} over`);
+
     } else {
-      console.log("DOESN");
+      console.log(`Component ${component} Doesn't exist`);
     }
 
-    console.log(yargs.argv._[1]);
-
-    console.log("add a new note");
   },
 });
 
-//Create remove command
-yargs.command({
-  command: "remove",
-  describe: "Remove the note",
-  handler: function () {
-    console.log("Removing a note");
-  },
-});
+// //Create remove command
+// yargs.command({
+//   command: "remove",
+//   describe: "Remove the note",
+//   handler: function () {
+//     console.log("Removing a note");
+//   },
+// });
 
 //Create list command
 yargs.command({
@@ -67,18 +101,10 @@ yargs.command({
   },
 });
 
-//Create read command
-yargs.command({
-  command: "read",
-  describe: "read note",
-  handler: function () {
-    console.log("read a note");
-  },
-});
 
+// Run Script
 yargs.argv;
 const command = yargs.argv._[0];
-
 if (command === undefined) {
   listCommands();
 }
