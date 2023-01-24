@@ -101,31 +101,25 @@ const writeStorybookData = async (pages) => {
   await fs.ensureFile(generated_storybook_path);
 
   const headerTxt = `
-    // GENERATED - and v 0.2.2 - this will change
+    // GENERATED - and v 0.3.2 - this will change
     import { Meta } from '@storybook/react';
 
-import { getMenuData } from 'tests/data/menu';
-import { flatListToHierarchical } from 'utilities';
+    import { PageTemplate } from 'tests/components';
 
-import { Main, Footer } from 'components';
-import HeaderSkeleton from 'components/Header/HeaderSkeleton';
-
-import { pages } from './data.generated';
-const headerMenu = flatListToHierarchical(getMenuData({}), '');
-
-const storyBookTitle = {} as Meta;
-
+    import { pages } from './data.generated';
+    
 const Template = (args: any) => {
   return (
     <>
-      <body className="relative">
-        <HeaderSkeleton hierarchicalMenu={headerMenu} theme={args.theme} />
-        <Main html={args.html} />
-        <Footer />
-      </body>
+      <PageTemplate html={args.html} />
     </>
   );
 };
+
+const storyBookTitle = {
+    component: Template,
+} as Meta<typeof Template>;
+
     `;
   fs.appendFile(generated_storybook_path, headerTxt);
 
