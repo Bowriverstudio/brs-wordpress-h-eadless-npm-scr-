@@ -1,0 +1,52 @@
+#!/usr/bin/env node
+require('dotenv-flow').config();
+
+const fs = require('fs');
+const path = require('path');
+
+const FormData = require('form-data');
+const fetch = require('node-fetch');
+
+// const config = require('../genesis.config');
+
+const updateRegisterBlockStyles = async (data) => {
+  const endpoint = `${process.env.NEXT_PUBLIC_WORDPRESS_URL}/wp-json/brs/v1/brsRegisterBlockStyles`;
+  const formData = new FormData();
+  formData.append('key', process.env.FAUSTWP_SECRET_KEY);
+  formData.append('data', JSON.stringify(data));
+  const response = await fetch(endpoint, { method: 'POST', body: formData });
+  const responseData = await response.json();
+  console.log(responseData);
+  return responseData;
+};
+
+/**
+ * Loops through all the components and searches `registerBlockStyles.js` file.
+ *
+ * If exists post to the Rest API
+ */
+const loopThroughComponents = async () => {
+  // const responseData = await clearRegisterBlockStyles();
+  // console.log('Cleared', responseData);
+  const source = 'src/components/Gutenberg';
+  fs.readdir(source, function (err, folders) {
+    if (err) {
+      console.error('Could not list the directory.', err);
+      process.exit(1);
+    }
+
+    const configData = [];
+    folders.forEach(function (folder) {
+      const registerBlockStylesFile = `${source}/${folder}/registerBlockStyles.js`;
+      if (fs.existsSync(registerBlockStylesFile)) {
+        const config = require(`../${source}/${folder}/registerBlockStyles.js`);
+        configData.push(config);
+        updateRegisterBlockStyles(config);
+      }
+    });
+
+    updateRegisterBlockStyles(configData);
+  });
+};
+
+loopThroughComponents();

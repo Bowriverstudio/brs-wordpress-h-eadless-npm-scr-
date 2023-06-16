@@ -1,0 +1,11 @@
+# Ignore artifacts:
+build
+coverage
+
+# Ignore all JavaScript and TypeScript dependencies:
+node_modules
+.next
+.vercel
+.vscode-backup
+coverage
+.husky

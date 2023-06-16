@@ -1,0 +1,40 @@
+#!/usr/bin/env node
+require('dotenv-flow').config();
+
+const fs = require('fs');
+const path = require('path');
+
+const FormData = require('form-data');
+const fetch = require('node-fetch');
+
+/**
+ * Loops through all the components and searches `registerBlockStyles.js` file.
+*
+* If exists post to the Rest API
+*/
+const pushEditorStyles = async () => {
+console.log('PUSH');
+const endpoint = `${process.env.NEXT_PUBLIC_WORDPRESS_URL}/wp-json/brs/v1/brsUploadBlockEditorStyles`;
+const formData = new FormData();
+formData.append('key', process.env.FAUSTWP_SECRET_KEY);
+
+const buffer = fs.readFileSync('./public/stylesheets/editor.css');
+const fileName = 'editor.css';
+
+formData.append('editor', buffer, {
+	contentType: 'text/plain',
+	name: 'editor',
+	filename: fileName,
+});
+
+// const abc = new File('public/stylesheets/editor.css');
+// formData.append('editor', abc);
+const response = await fetch(endpoint, { method: 'POST', body: formData });
+const responseData = await response.json();
+console.log(responseData);
+};
+
+pushEditorStyles();
+		 
+		 
+				  

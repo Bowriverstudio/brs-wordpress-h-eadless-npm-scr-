@@ -1,0 +1,61 @@
+#!/usr/bin/env node
+
+const fs = require('fs');
+const path = require('path');
+
+const dotenv = require('dotenv');
+const fetch = require('node-fetch');
+
+const config = require('../genesis.config');
+const envConfig = dotenv.parse(fs.readFileSync('.env.local'));
+for (const k in envConfig) {
+  process.env[k] = envConfig[k];
+}
+
+const pullThemeFiles = () => {
+
+const body = JSON.stringify({
+	query: `
+	query { brsPullThemeFiles(key: "${process.env.FAUSTWP_SECRET_KEY}") {
+	content
+	name }
+	}`,
+});
+
+fetch(config.endpoint, {
+	method: 'POST',
+	headers: {
+	'Content-Type': 'application/json',
+	},
+	body: body,
+})
+	.then((res) => res.json())
+	.then((result) => {
+	// console.log(JSON.stringify(result.data));
+
+	result.data.brsPullThemeFiles.map((block) => {
+		const { name, content } = block;
+		console.log(name);
+
+		const fileName = `${name}`;
+
+		if (name) {
+		try {
+			fs.writeFileSync(
+			path.resolve(process.cwd(), fileName),
+			content,
+			'utf-8'
+			);
+			fs.chmodSync(fileName, '755');
+		} catch (err) {
+			// uh-oh, something happened here!
+			console.log('ERROR', err.message);
+		}
+		}
+	});
+	});
+};
+
+pullThemeFiles();
+		 
+				  

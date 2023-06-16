@@ -1,0 +1,162 @@
+#!/usr/bin/env node
+
+const fs = require('fs');
+const path = require('path');
+
+const fetch = require('node-fetch');
+
+const config = require('../genesis.config');
+
+// genesisCustomBlockTypescript - generates the file
+const generateTypescript = () => {
+  const body = JSON.stringify({
+    query: `
+	query { genesisCustomBlockTypescript
+	}`,
+  });
+
+  fetch(config.endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: body,
+  })
+    .then((res) => res.json())
+    .then((result) => {
+      try {
+        // write the file to src/styles/tw.generate.js after
+        // having prettier format the string for us
+        fs.writeFileSync(
+          path.resolve(process.cwd(), `${config.typescript.destination}`),
+          result.data.genesisCustomBlockTypescript,
+          'utf-8'
+        );
+      } catch (err) {
+        // uh-oh, something happened here!
+        console.log('ERROR', err.message);
+      }
+    });
+};
+
+if (config?.typescript?.generate) {
+  generateTypescript();
+  console.log('Done TypeScript');
+}
+
+const generateScaffoldComponent = ({ componentName, slug }) => {
+  console.log('Generating - ' + componentName + ' ' + slug);
+
+  const body = JSON.stringify({
+    query: `
+	query { genesisCustomBlockFileScaffold(slug: "${slug}") {
+	content
+	name }
+	}`,
+  });
+
+  fetch(config.endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: body,
+  })
+    .then((res) => res.json())
+    .then((result) => {
+      // console.log(JSON.stringify(result.data.genesisCustomBlockFileScaffold));
+
+      result.data.genesisCustomBlockFileScaffold.map((block) => {
+        const { name, content } = block;
+        const componentDirectory = `${config.scaffold.destination}${componentName}`;
+        const fileName = `${config.scaffold.destination}${componentName}/${name}`;
+        // Component Exists Does Not Exist or it can be overwritten.
+        if (!fs.existsSync(`${fileName}`) || config.scaffold.overwrite) {
+          // Create Folder if Required
+          if (!fs.existsSync(`${componentDirectory}`)) {
+            fs.mkdirSync(`${componentDirectory}`);
+            fs.mkdirSync(`${componentDirectory}/tests`);
+          }
+
+          if (name) {
+            try {
+              fs.writeFileSync(
+                path.resolve(process.cwd(), fileName),
+                content,
+                'utf-8'
+              );
+            } catch (err) {
+              // uh-oh, something happened here!
+              console.log('ERROR', err.message);
+            }
+          }
+        }
+      });
+    });
+};
+
+const generateScaffold = () => {
+  const body = JSON.stringify({
+    query: `
+	query { genesisCustomBlockSummary {componentName, slug}
+	}`,
+  });
+
+  fetch(config.endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: body,
+  })
+    .then((res) => res.json())
+    .then((result) => {
+      result.data.genesisCustomBlockSummary.map((block) => {
+        generateScaffoldComponent(block);
+      });
+    });
+};
+
+if (config?.scaffold?.generate) {
+  generateScaffold();
+  console.log('Finished Generate scaffold');
+}
+
+const generateParseGenesisCustomBlocks = () => {
+  const body = JSON.stringify({
+    query: `
+	query { genesisGenerateParseGenesisCustomBlocks
+	}`,
+  });
+
+  fetch(config.endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: body,
+  })
+    .then((res) => res.json())
+    .then((result) => {
+      try {
+        // write the file to src/styles/tw.generate.js after
+        // having prettier format the string for us
+        fs.writeFileSync(
+          path.resolve(
+            process.cwd(),
+            config.parseGenesisCustomBlocks.destination
+          ),
+          result.data.genesisGenerateParseGenesisCustomBlocks,
+          'utf-8'
+        );
+      } catch (err) {
+        // uh-oh, something happened here!
+        console.log('ERROR', err.message);
+      }
+    });
+};
+
+if (config?.parseGenesisCustomBlocks?.generate) {
+  generateParseGenesisCustomBlocks();
+  console.log('Finished Html2React');
+}
