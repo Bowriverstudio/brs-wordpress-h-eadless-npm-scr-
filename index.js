@@ -11,14 +11,34 @@ require('dotenv').config({ path: `${projectRoot}/.env.local` });
 
 const commands = [
     {
+        command: "acf-create-block",
+        script: "acf-create-block.js",
+        description: "Creates a new ACF block"
+    },
+    {
+        command: "acf-pull",
+        script: "acf-pull.js",
+        description: "Pulls ACF block data from WordPress"
+    },
+    {
         command: "daisyui",
         script: "daisyui.js",
-        description: "Generates the daisyui.generated.css, daisyui.generated.config.tss files and updates the theme.json color schema"
+        description: "DO NOT USE: Generates the daisyui.generated.css, daisyui.generated.config.tss, tailwind.generated.ts files and updates the theme.json color schema"
+    },
+    {
+        command: "layout",
+        script: "layout.js",
+        description: "Generates the layout.generated.css, and updates the theme.json layout schema"
     },
     {
         command: "menu-locations",
         script: "menu-locations.js",
         description: "Generates the menu-locations.ts file"
+    },
+    {
+        command: "register_block_styles",
+        script: "register_block_styles.js",
+        description: "Pushes the each gutenbergs register_block_styles and css files to WordPress"
     },
     {
         command: "push-theme",
@@ -42,16 +62,8 @@ if (selectedCommand) {
     const child = spawn(
         'node',
         [path.resolve(__dirname, `scripts/${selectedCommand.command}.js`)],
-        { env: process.env }
+        { stdio: 'inherit', env: process.env } // Forward stdio to the child process
     );
-
-    child.stdout.on('data', (data) => {
-        console.log(`stdout:\n${data}`);
-    });
-
-    child.stderr.on('data', (data) => {
-        console.error(`stderr:\n${data}`);
-    });
 
     child.on('close', (code) => {
         console.log(`child process exited with code ${code}`);

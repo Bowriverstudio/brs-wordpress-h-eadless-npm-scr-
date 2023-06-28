@@ -1,7 +1,6 @@
 /**
  * File: scripts/daisyui.js   
  */
-const { request } = require('graphql-request');
 const fs = require('fs');
 const { getBrsConfig, camelCaseToTitleCase, logSuccess, getProjectRoot } = require('brs-wordpress-headless-npm-scripts/utils');
 
@@ -162,3 +161,32 @@ updateThemeJsonPalette(getBrsConfig());
 
 
 
+
+function generateTailwindFile(config) {
+    const tailwindPath = getProjectRoot() + config['tailwind-destination'];
+
+    const theme_data = require(getProjectRoot() + config.themes.source);
+    const default_theme = config.themes.default;
+
+    const colors = theme_data[default_theme].colors;
+
+    let fileContent = `// This file is generated via yarn brs daisyui\n\nexport const daisyui = {\n    colors: {\n`;
+
+    for (let color_key in colors) {
+        const formattedKey = color_key.includes('-') ? `'${color_key}'` : color_key;
+        fileContent += `        ${formattedKey}: "var(--${color_key})",\n`;
+    }
+
+    fileContent += `    }\n}`;
+
+    fs.writeFile(tailwindPath, fileContent, err => {
+        if (err) {
+            console.error('Failed to write the CSS file', err);
+        } else {
+            logSuccess(`Successfully generated the Tailwindg file at ${tailwindPath}`);
+        }
+    });
+}
+
+
+generateTailwindFile(config);
