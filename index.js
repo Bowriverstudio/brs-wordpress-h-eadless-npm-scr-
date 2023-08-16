@@ -11,14 +11,30 @@ require('dotenv').config({ path: `${projectRoot}/.env.local` });
 
 const commands = [
     {
+        command: "acf-blocks",
+        script: "acf-blocks.js",
+        description: "Summerizes ACF blocks"
+    },
+    {
         command: "acf-create-block",
         script: "acf-create-block.js",
         description: "Creates a new ACF block"
     },
     {
-        command: "acf-pull",
-        script: "acf-pull.js",
-        description: "Pulls ACF block data from WordPress"
+        command: "acf-pull-block",
+        script: "acf-pull-block.js",
+        description: "Pulls a specified ACF block data from WordPress"
+    },
+
+    {
+        command: "acf-pull-blocks",
+        script: "acf-pull-blocks.js",
+        description: "Pulls all ACF block data from WordPress"
+    },
+    {
+        command: "acf-push-options",
+        script: "acf-push-options.js",
+        description: "Push ACF Options to WordPress"
     },
     {
         command: "daisyui",
@@ -53,6 +69,7 @@ const commands = [
 ];
 
 const userCommand = process.argv[2];
+const argsToForward = process.argv.slice(3)
 
 const selectedCommand = commands.find(cmd => cmd.command === userCommand);
 
@@ -61,7 +78,8 @@ if (selectedCommand) {
 
     const child = spawn(
         'node',
-        [path.resolve(__dirname, `scripts/${selectedCommand.command}.js`)],
+        [path.resolve(__dirname, `scripts/${selectedCommand.script}`), ...argsToForward],
+
         { stdio: 'inherit', env: process.env } // Forward stdio to the child process
     );
 

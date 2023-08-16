@@ -1,0 +1,128 @@
+import { Canvas, Meta, Markdown } from '@storybook/blocks';
+import ShowBrsConfig from "./ShowBrsConfig"
+
+<Meta title="docs/brs/acf" />
+
+# Advanced Custom Fields (acf)
+
+
+## Example Work through
+![Sample Component](./brs/who-we-are.png)
+*Component we are going to design.*
+
+### 1) Create acf block in nextjs
+
+```bash
+yarn brs acf-create-block
+## We will use who-we-are
+```
+![Sample Component](./brs/create-block.png)
+
+
+This creates a folder "MMXWhoWeAre" in the location defined by `brs.config.js`
+
+In this example - the project as `brs.config.js` is MMX.
+
+Contents of MmxWhoWeAre Directory
+.
+├── block.json
+├── config.js
+└── local_field_group.php
+
+The block.json file gets uploaded to the wordpress side and creates a defines the block. 
+
+https://www.advancedcustomfields.com/resources/blocks/#blockstestimonialblockjson
+
+### 2) WordPress side create A field group -
+![Sample Component](./brs/Edit-Field-Group.png)
+* https://www.advancedcustomfields.com/resources/blocks/#2-create-a-field-group*
+
+### 3) Wordpress Side add a block
+
+- In a page let us say mmx add the block Who We are.
+
+Then in the graphql copy the rendered html.
+
+```graphql
+query NewQuery {
+
+  pageBy(uri: "/mmx") {
+    id
+    content(format: RENDERED)
+  }
+}
+```
+
+### 4) Next Side pull the block and edit.
+
+```bash
+yarn brs acf-pull-blocks
+```
+
+Then replace the storybook  html from the graphql in set 3.
+
+Also update `config.json` so that it is no longer overwritten.
+```js
+module.exports = {
+    // Overwrite this component with yarn brs acf-pull 
+    overwrite: false,
+}
+```
+
+
+Then edit the component.
+
+Some useful sniplets of code are:
+
+#### Handle an image.
+```tsx
+
+
+    const icon_width = Number(props.icon_width);
+    const icon_height = Number(props.icon_height);
+
+    const targetHeight = 60;
+    const aspectRatio = icon_width / icon_height;
+    const adjustedWidth = targetHeight * aspectRatio;
+
+<Image
+                                src={icon_url}
+                                alt={icon_alt}
+                                title={icon_title}
+                                height={targetHeight}
+                                width={adjustedWidth}
+                                layout="fixed"
+                            />
+
+```
+```tsx
+# This will convert `line 1 \n line 2`  into line 1 <br\> line 2
+import { parseNewline } from "utilities";
+
+        {parseNewline(sub_header)}
+
+```
+
+### Wordpress side / next js
+
+when you are happy with the fields you can add them to local_field_group.php
+
+`example.com/wp-admin/edit.php?post_type=acf-field-group&page=acf-tools`
+
+Then gerenate the php for the block and only copy the array within the acf_add_local_field_group function.
+
+
+
+	---
+## To regnerate this file run.
+```bash
+yarn brs storybook
+```
+
+## brs.config.js 
+
+### brs.acf
+<ShowBrsConfig brsKey="acf" label="WhoWeAre"/>
+### brs.project
+<ShowBrsConfig brsKey="project" />
+

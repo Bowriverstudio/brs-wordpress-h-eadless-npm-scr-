@@ -1,7 +1,7 @@
-const readline = require('readline');
-const fs = require('fs');
 const chalk = require('chalk');
+const fs = require('fs');
 const path = require('path'); // Add this
+const readline = require('readline');
 const { getBrsConfig, getProjectRoot, uploadFile, toCamelCase } = require('brs-wordpress-headless-npm-scripts/utils');
 
 const source = getBrsConfig().acf.source;
@@ -32,8 +32,14 @@ const askQuestion = (query, defaultAnswer = '') => {
 };
 const main = async () => {
     // Name input. Name format will be: project/user_input
-    const user_input = await askQuestion(`Enter block name (use a "-" to seperate words)`, `${project}/`);
-    const block_name = project + '/' + user_input.toLowerCase();  // Format name
+    const user_input = await askQuestion(`Enter block name alone (use a "-" to separate words), or a full path in the format project/block:`, `${project}/`);
+    // Check if user input contains '/'
+    let block_name = '';
+    if (user_input.includes('/')) {
+        block_name = user_input.toLowerCase();  // Use user input directly
+    } else {
+        block_name = project + '/' + user_input.toLowerCase();  // Prepend with project
+    }
 
     // Folder will be the second part of the name (after '/'). This will be used in uploadFile.
     const folder_name = toCamelCase(block_name)
@@ -94,7 +100,15 @@ const main = async () => {
         const configJsPath = path.join(dirPath, 'config.js');
 
         // Construct data for the config.js file.
-        const configData = "module.exports = {\n    // Overwrite this component with yarn brs acf-pull \n    overwrite:true,\n}";
+        const configData = `
+        module.exports = {
+            overwrite: {
+                // yarn brs acf-pull-block or blocks will overwrite this component or storybook based on these values
+                storybook: true,
+                component: false
+            }
+        };
+        `;
 
         // Write the config.js file.
         fs.writeFile(configJsPath, configData, (err) => {
