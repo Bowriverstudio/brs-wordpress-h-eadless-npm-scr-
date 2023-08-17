@@ -18,11 +18,11 @@ function generateTailwindCSS(input, output) {
     // console.log(`Generating Tailwind CSS from ${input} to ${output}...`);
     exec(`npx tailwindcss -i ${input} -o ${output}`, (err, stdout, stderr) => {
         const action = 'uploadAdminStyles';
-        console.log(outputPath)
         uploadFile({ filePath: outputPath, action, fileName: 'admin.css' });
-
     });
 }
+
+
 
 const inputPath = getProjectRoot() + config.source;
 const outputPath = getProjectRoot() + config.destination;

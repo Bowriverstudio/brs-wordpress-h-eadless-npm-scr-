@@ -6,6 +6,7 @@
 const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { intro, outro, select } = require('@clack/prompts');
 const projectRoot = path.resolve(__dirname, '../../');
 require('dotenv').config({ path: `${projectRoot}/.env.local` });
 
@@ -68,30 +69,81 @@ const commands = [
     }
 ];
 
-const userCommand = process.argv[2];
-const argsToForward = process.argv.slice(3)
+async function main() {
+    const userCommand = process.argv[2];
 
-const selectedCommand = commands.find(cmd => cmd.command === userCommand);
+    if (userCommand) {
+        const isValidCommand = commands.some(cmd => cmd.command === userCommand);
 
-if (selectedCommand) {
-    console.log(`Running command 'yarn brs ${selectedCommand.command}', which will ${selectedCommand.description}`);
+        if (isValidCommand) {
+            runCommand(userCommand);
+        } else {
+            console.log(`'yarn brs ${userCommand}' is not a valid command. Please use one of the following:`);
+            displayAvailableCommands();
+            process.exit(1); // Exit with an error code.
+        }
+    } else {
+        promptForCommand();
+    }
+}
 
-    const child = spawn(
-        'node',
-        [path.resolve(__dirname, `scripts/${selectedCommand.script}`), ...argsToForward],
-
-        { stdio: 'inherit', env: process.env } // Forward stdio to the child process
-    );
-
-    child.on('close', (code) => {
-        console.log(`child process exited with code ${code}`);
-    });
-
-} else {
-    console.log(`'yarn brs ${userCommand}' is not a valid command. Please use one of the following:`);
+function displayAvailableCommands() {
     const displayTable = commands.map(({ command, description }) => ({
         command: `yarn brs ${command}`,
         description
     }));
     console.table(displayTable);
 }
+
+async function promptForCommand() {
+    intro(`Command Selector`);
+
+    const commandOptions = commands.map(({ command, description }) => ({
+        value: command,
+        label: `${command} - ${description}`
+    }));
+
+    try {
+        const selectedCommand = await select({
+            message: 'Which command do you want to execute?',
+            options: commandOptions
+        });
+
+        runCommand(selectedCommand);
+    } catch (value) {
+        outro(`Thanks for using the Command Selector!`);
+        process.exit(0);
+    }
+}
+
+
+function runCommand(userCommand) {
+    const argsToForward = process.argv.slice(3);
+    const selectedCommand = commands.find(cmd => cmd.command === userCommand);
+
+    if (selectedCommand) {
+        console.log(`Running command 'yarn brs ${selectedCommand.command}', which will ${selectedCommand.description}`);
+
+        const child = spawn(
+            'node',
+            [path.resolve(__dirname, `scripts/${selectedCommand.script}`), ...argsToForward],
+            { stdio: 'inherit', env: process.env } // Forward stdio to the child process
+        );
+
+        child.on('close', (code) => {
+            console.log(`child process exited with code ${code}`);
+        });
+
+    } else {
+        console.log(`'yarn brs ${userCommand}' is not a valid command. Please use one of the following:`);
+        const displayTable = commands.map(({ command, description }) => ({
+            command: `yarn brs ${command}`,
+            description
+        }));
+        console.table(displayTable);
+    }
+}
+
+
+
+main();
