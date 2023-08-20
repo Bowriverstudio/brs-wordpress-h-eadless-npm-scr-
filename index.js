@@ -58,6 +58,11 @@ const commands = [
         description: "Pushes the each gutenbergs register_block_styles and css files to WordPress"
     },
     {
+        command: "push-admin-styles",
+        script: "push-admin-styles.js",
+        description: "Compiles with tailwind the admin styles and pushes it to gutenberg"
+    },
+    {
         command: "push-theme",
         script: "push-theme.js",
         description: "Pushes the theme.json to the WordPress site"

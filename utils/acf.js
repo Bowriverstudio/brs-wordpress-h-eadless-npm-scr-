@@ -123,7 +123,7 @@ async function createBlockScaffoldFiles(blockName) {
             const filePath = path.join(targetDirectory, fileDetail.fileName || fileDetail.name);
             fs.mkdirSync(targetDirectory, { recursive: true });
             fs.writeFileSync(filePath, fileDetail.content);
-            console.log(chalk.green(`File ${fileDetail.fileName || fileDetail.name} has been written to ${targetDirectory}`));
+            console.log(chalk.green(`${fileDetail.fileName || fileDetail.name} file generated.`));
         }
     }
 
