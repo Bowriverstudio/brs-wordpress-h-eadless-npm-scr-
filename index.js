@@ -53,6 +53,11 @@ const commands = [
         description: "Generates the menu-locations.ts file"
     },
     {
+        command: "generate-test-data",
+        script: "generate-test-data.js",
+        description: "Generates test data from storybook"
+    },
+    {
         command: "register_block_styles",
         script: "register_block_styles.js",
         description: "Pushes the each gutenbergs register_block_styles and css files to WordPress"
