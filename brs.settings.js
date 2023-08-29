@@ -31,25 +31,29 @@ const settings = {
         cpt: {
             source: "/wp/cpt",
         },
-        menuLocations: {
-            destination: "/src/client/menu.locations.generated.ts",
-        },
         gutenbergBlocks: {
             source: "/src/components/Molecules/GutenbergBlocks/",
         },
-        themejson: {
-            source: "theme.json",
-        },
+
         layout: {
             source: "layout/index.js",
             "css-destination": "layout/layout.generated.css",
             "tailwind-destination": "layout/tailwind.generated.js",
         },
+        menuLocations: {
+            destination: "/src/client/menu.locations.generated.ts",
+        },
+
+        patterns: {
+            source: "/wp/patterns/functions.php",
+        },
         styles: {
             source: "/src/styles/admin/admin.css",
             destination: "/src/styles/admin/admin.generated.css",
-        }
-
+        },
+        themejson: {
+            source: "theme.json",
+        },
     },
     storybook: {
         documentation: {

@@ -58,9 +58,19 @@ const commands = [
         description: "Generates test data from storybook"
     },
     {
+        command: "pull-gutenberg-block-stories",
+        script: "pull-gutenberg-block-stories.js",
+        description: "Generates test data for gutenberg blocks"
+    },
+    {
         command: "register_block_styles",
         script: "register_block_styles.js",
         description: "Pushes the each gutenbergs register_block_styles and css files to WordPress"
+    },
+    {
+        command: "push-wp-patterns",
+        script: "push-wp-patterns.js",
+        description: "Pushes the wp/pattern file to wordpress."
     },
     {
         command: "push-admin-styles",
