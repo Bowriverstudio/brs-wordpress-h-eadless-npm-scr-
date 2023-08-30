@@ -2,7 +2,7 @@ const chalk = require('chalk');
 const fs = require('fs-extra');
 const { request } = require('graphql-request');
 const path = require('path');
-const { getBrsConfig, getProjectRoot, getGraphQLEndpoint, toCamelCase } = require('brs-wordpress-headless-npm-scripts/utils');
+const { getBrsConfig, getProjectRoot, getGraphQLEndpoint, toCamelCase, uploadFile } = require('brs-wordpress-headless-npm-scripts/utils');
 
 
 function generateAcfTypescript() {
@@ -126,7 +126,6 @@ async function createBlockScaffoldFiles(blockName) {
             console.log(chalk.green(`${fileDetail.fileName || fileDetail.name} file generated.`));
         }
     }
-
 }
 
 
@@ -148,11 +147,42 @@ async function getAcfBlockNames() {
     }
 }
 
+const uploadAcfBlockToWP = (folder) => {
+
+    const source = getBrsConfig().acf.source;
+    const acfDirectory = path.join(getProjectRoot(), source);
+    const fullFolderPath = path.join(acfDirectory, folder);
+    ['block.json', 'local_field_group.php'].forEach(fileName => {
+        let filePath = path.join(fullFolderPath, fileName);
+
+        // Check if file exists
+        if (fs.existsSync(filePath)) {
+            let action;
+            if (fileName === 'block.json') {
+                action = 'uploadAcfBlockJsonFile';
+            } else if (fileName === 'local_field_group.php') {
+                action = 'uploadAcfBlockPhpFile';
+            }
+
+            // After successful write, upload the file.
+            uploadFile({
+                filePath: filePath,
+                action: action,
+                folder: folder
+            });
+
+            console.log(`Directory '${folder}' contains: ${fileName}`);
+        }
+    });
+}
+
+
 
 
 module.exports = {
     getAcfBlockNames,
     createBlockScaffoldFiles,
     generateAcfTypescript,
-    generateParseAcfCustomBlocks
+    generateParseAcfCustomBlocks,
+    uploadAcfBlockToWP
 }

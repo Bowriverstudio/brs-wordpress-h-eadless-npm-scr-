@@ -33,6 +33,12 @@ const commands = [
         description: "Pulls all ACF block data from WordPress"
     },
     {
+        command: "acf-push-block",
+        script: "acf-push-block.js",
+        description: "Push ACF Block to wordpress"
+    },
+
+    {
         command: "acf-push-options",
         script: "acf-push-options.js",
         description: "Push ACF Options to WordPress"
