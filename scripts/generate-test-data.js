@@ -15,11 +15,7 @@ const generateTestData = require(absoluteConfigPath);
         const dataContent = await generateTestData();
 
         fs.writeFile(absoluteDestinationPath, dataContent, err => {
-            if (err) {
-                console.error(chalk.red(`Error writing to file: ${err}`));
-            } else {
-                console.log(chalk.green(`File generated at ${destination}`));
-            }
+            err ? console.error(chalk.red(`Error writing to file: ${err}`)) : console.log(chalk.green(`File generated at ${destination}`));
         });
 
     } catch (error) {

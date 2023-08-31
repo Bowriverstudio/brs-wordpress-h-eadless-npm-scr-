@@ -1,17 +1,12 @@
 const chalk = require('chalk');
 const fs = require('fs');
 const path = require('path'); // Add this
-const readline = require('readline');
 const { getBrsConfig, getProjectRoot, uploadFile, toCamelCase } = require('brs-wordpress-headless-npm-scripts/utils');
+const { text, intro, isCancel, cancel, outro } = require('@clack/prompts');
 
 const source = getBrsConfig().acf.source;
 const project = getBrsConfig().project;
 const rootPath = getProjectRoot() + source;
-
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
 
 // Utility function to capitalize a string
 function capitalize(s) {
@@ -19,49 +14,50 @@ function capitalize(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-const askQuestion = (query, defaultAnswer = '') => {
-    return new Promise((resolve) => {
-        const question = defaultAnswer
-            ? `${query}: ${chalk.gray('(Default: ' + defaultAnswer + ')')} `
-            : `${query}: `;
-
-        rl.question(question, (answer) => {
-            resolve(answer || defaultAnswer);
-        });
+const askQuestion = async (query, defaultAnswer = '', required = false) => {
+    const user_input = await text({
+        message: query,
+        initialValue: defaultAnswer,
+        validate(value) {
+            if (required && value.length === 0) return 'Value is required!';
+        },
     });
-};
-const main = async () => {
-    // Name input. Name format will be: project/user_input
-    const user_input = await askQuestion(`Enter block name alone (use a "-" to separate words), or a full path in the format project/block:`, `${project}/`);
-    // Check if user input contains '/'
-    let block_name = '';
-    if (user_input.includes('/')) {
-        block_name = user_input.toLowerCase();  // Use user input directly
-    } else {
-        block_name = project + '/' + user_input.toLowerCase();  // Prepend with project
+    if (isCancel(user_input)) {
+        cancel('Operation cancelled.');
+        process.exit(0);
     }
+    return user_input;
+};
+
+const main = async () => {
+
+    intro('Create ACF Block');
+
+    const block_name = await askQuestion('`Enter block name alone (use a "-" to separate words), or a full path in the format project/block:`', `${project}/`, true);
+
+    // Check if user input contains '/'
+    const full_block_name = `${block_name.includes('/') ? '' : project + '/'}${block_name.toLowerCase()}`;
+    const simple_block_name = full_block_name.split('/')[1]
 
     // Folder will be the second part of the name (after '/'). This will be used in uploadFile.
-    const folder_name = toCamelCase(block_name)
+    const folder_name = toCamelCase(simple_block_name)
 
     // Title will default to capitalized version of user input (without the project prefix).
-    const block_title = await askQuestion('Enter block title', capitalize(user_input));
+    const block_title = await askQuestion('Enter block title', capitalize(simple_block_name.replace(/-/gi, ' ')), true);
 
     // Other inputs with their default values.
-    let block_description = await askQuestion('Enter block description');
-    let block_category = await askQuestion('Enter block category', 'formatting');
-    let block_icon = await askQuestion('Enter block icon', 'dashicons-art');
+    const block_description = await askQuestion('Enter block description');
+    const block_category = await askQuestion('Enter block category', 'formatting');
+    let block_icon = await askQuestion('Enter block icon', 'schedule');
     let keywords_input = await askQuestion('Enter keywords (comma separated)');
 
-    rl.close();
-
     // Process keywords input to get an array of keywords.
-    const keywords = keywords_input.split(',').map(keyword => keyword.trim());
+    const keywords = keywords_input ? keywords_input.split(',').map(keyword => keyword.trim()) : [];
 
     // Construct data for the block.json file.
     const data = {
         name: block_name,
-        title: block_title,
+        title: block_title.split(' ').map(word => capitalize(word)).join(' '),
         description: block_description,
         category: block_category,
         icon: block_icon,
@@ -74,7 +70,7 @@ const main = async () => {
     };
 
     // Prepare directory and file path.
-    const dirPath = path.join(rootPath, toCamelCase(block_name));
+    const dirPath = path.join(rootPath, folder_name);
     const blockJsonPath = path.join(dirPath, 'block.json');
 
     // Check if directory already exists to prevent overwriting.
@@ -113,7 +109,7 @@ const main = async () => {
         // Write the config.js file.
         fs.writeFile(configJsPath, configData, (err) => {
             if (err) throw err;
-            console.log('The config.js file has been saved in ' + configJsPath);
+            outro('Operation completed. The config.js file has been saved in ' + configJsPath);
         });
 
     }
