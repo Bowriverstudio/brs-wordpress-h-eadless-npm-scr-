@@ -37,7 +37,11 @@ const commands = [
         script: "acf-push-block.js",
         description: "Push ACF Block to wordpress"
     },
-
+    {
+        command: "acf-push-blocks",
+        script: "acf-push-blocks.js",
+        description: "Push ACF Blocks to wordpress"
+    },
     {
         command: "acf-push-options",
         script: "acf-push-options.js",
@@ -74,6 +78,11 @@ const commands = [
         description: "Pushes the each gutenbergs register_block_styles and css files to WordPress"
     },
     {
+        command: "push-cpt",
+        script: "push-cpt.js",
+        description: "Pushes CPTs file to wordpress."
+    },
+    {
         command: "push-wp-patterns",
         script: "push-wp-patterns.js",
         description: "Pushes the wp/pattern file to wordpress."
@@ -87,6 +96,11 @@ const commands = [
         command: "push-theme",
         script: "push-theme.js",
         description: "Pushes the theme.json to the WordPress site"
+    },
+    {
+        command: "push-functions",
+        script: "push-functions.js",
+        description: "Pushes the functions.php to the WordPress site"
     },
     {
         command: "validate",

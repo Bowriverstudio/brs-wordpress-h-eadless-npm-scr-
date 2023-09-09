@@ -4,7 +4,7 @@ const { getBrsConfig, camelCaseToTitleCase, uploadFile, getProjectRoot } = requi
 
 // console.log(getBrsConfig().daisyui)
 
-const config = getBrsConfig().gutenbergBlocks;
+const config = getBrsConfig().wordpress.gutenbergBlocks;
 const path = getProjectRoot() + config.source;
 console.log(path)
 
