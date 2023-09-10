@@ -1,0 +1,32 @@
+import { Meta, Story, Canvas } from '@storybook/addon-docs/blocks';
+
+<Meta title="Documentation/Conventional Commits" />
+
+# Conventional Commits Guide
+
+Conventional Commits is a commit naming convention that helps teams to have an automatic and conventional commit naming strategy. Our project uses the `git-conventional-commits` tool to ensure that every commit message adheres to the Conventional Commits specification.
+
+## Commit Types
+
+When making a commit, start the message with one of the following types:
+
+- `feat`: A new feature
+- `fix`: A bug fix
+- `perf`: A performance improvement
+- `refactor`: A code change that neither fixes a bug nor adds a feature
+- `style`: Changes that do not affect the meaning of the code (white-space, formatting, etc)
+- `test`: Adding or fixing tests
+- `build`: Changes to the build system or external dependencies
+- `ops`: Operational changes or adjustments
+- `docs`: Documentation changes
+- `chore`: Maintenance tasks, chores, or updates that don't fit other categories
+- `merge`: Merging branches or code
+- `revert`: Reverting changes
+
+## Example
+
+If you're adding a new button feature:
+
+```bash
+git commit -m "feat: add a new button component"
+```
