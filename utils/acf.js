@@ -28,11 +28,14 @@ function generateAcfTypescript() {
 
 function generateParseAcfCustomBlocks() {
     const parseAcfCustomBlocks_path = getProjectRoot() + getBrsConfig().acf.parseAcfCustomBlocks.destination;
+    const acfComponentsRootPath = getBrsConfig().acf.componentsRootPath || "components/Molecules/ACFCustomBlocks/";
+
     const parseAcfCustomBlocks_query = `
     query NewQuery {
-        acfCustomBlocksHtml2React
+        acfCustomBlocksHtml2React(acfComponentsRootPath: "${acfComponentsRootPath}")
     }
     `;
+
 
     request(getGraphQLEndpoint(), parseAcfCustomBlocks_query)
         .then((data) => {

@@ -40,7 +40,7 @@ const main = async () => {
     const simple_block_name = full_block_name.split('/')[1]
 
     // Folder will be the second part of the name (after '/'). This will be used in uploadFile.
-    const folder_name = toCamelCase(simple_block_name)
+    const folder_name = toCamelCase(full_block_name)
 
     // Title will default to capitalized version of user input (without the project prefix).
     const block_title = await askQuestion('Enter block title', capitalize(simple_block_name.replace(/-/gi, ' ')), true);
@@ -68,6 +68,7 @@ const main = async () => {
         },
         align: "full"
     };
+
 
     // Prepare directory and file path.
     const dirPath = path.join(rootPath, folder_name);

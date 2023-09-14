@@ -2,7 +2,7 @@
 require("dotenv").config();
 
 /**
- * BRS Config
+ * GenesisConfig
  */
 const config = {
     project: "mmx",
@@ -14,12 +14,14 @@ const config = {
         destination: "/src/styles/admin/admin.generated.css",
     },
     acf: {
+
         source: "/src/components/Molecules/ACFCustomBlocks/",
+        componentsRootPath: "components/Molecules/ACFCustomBlocks/",
         typescript: {
             destination: "/src/client/acf.generated.ts",
         },
         parseAcfCustomBlocks: {
-            destination: "/src/components/Html2React/parseAcfCustomBlocks.tsx",
+            destination: "/src/components/Organisms/Html2React/parseAcfCustomBlocks.tsx",
         },
         options: {
             source: "/wp/acf/options/theme-options.php",
@@ -28,10 +30,21 @@ const config = {
     menuLocations: {
         destination: "/src/client/menu.locations.generated.ts",
     },
-    gutenbergBlocks: {
-        source: "/src/components/Molecules/GutenbergBlocks/",
-    },
     wordpress: {
+        gutenbergBlocks: {
+            source: "/src/components/Molecules/GutenbergBlocks/",
+            blocks: [
+                ""
+            ]
+        },
+
+        functions: {
+            source: "/wp/functions.php",
+        },
+
+        patterns: {
+            source: "/wp/patterns/",
+        },
         source: "/src/styles/wordpress/",
         themejson: {
             source: "theme.json",
